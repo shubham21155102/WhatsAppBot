@@ -1,0 +1,99 @@
+import inputSanitization from "../sidekick/input-sanitization";
+import Strings from "../lib/db";
+import Client from "../sidekick/client.js";
+import WhatsAppBot from "../sidekick/sidekick";
+import format from "string-format";
+import { MessageType } from "../sidekick/message-type";
+import { proto } from "@adiwajshing/baileys";
+
+const MUTE = Strings.mute;
+
+module.exports = {
+    name: "mute",
+    description: MUTE.DESCRIPTION,
+    extendedDescription: MUTE.EXTENDED_DESCRIPTION,
+    demo: { isEnabled: true, text: [".mute", ".mute 10 s", ".mute 1 h"] },
+    async handle(client: Client, chat: proto.IWebMessageInfo, WhatsAppBot: WhatsAppBot, args: string[]): Promise<void> {
+        try {
+            if (!WhatsAppBot.isGroup) {
+                client.sendMessage(
+                    WhatsAppBot.chatId,
+                    MUTE.NOT_GROUP_CHAT,
+                    MessageType.text
+                ).catch(err => inputSanitization.handleError(err, client, WhatsAppBot));
+                return;
+            }
+            await client.getGroupMetaData(WhatsAppBot.chatId, WhatsAppBot);
+            if (!WhatsAppBot.isBotGroupAdmin) {
+                client.sendMessage(
+                    WhatsAppBot.chatId,
+                    MUTE.NOT_ADMIN,
+                    MessageType.text
+                ).catch(err => inputSanitization.handleError(err, client, WhatsAppBot));
+                return;
+            }
+            if (!args[0]) {
+                const ok = await client.sock.chatModify(
+                    { mute: 8*60*60*1000 },
+                    WhatsAppBot.chatId
+                ).catch(err => inputSanitization.handleError(err, client, WhatsAppBot));
+                console.log(ok);
+                client.sendMessage(
+                    WhatsAppBot.chatId,
+                    MUTE.CHAT_ADMIN_ONLY,
+                    MessageType.text
+                ).catch(err => inputSanitization.handleError(err, client, WhatsAppBot));
+                return;
+            } else if (parseInt(args[0]) === NaN) {
+                client.sendMessage(
+                    WhatsAppBot.chatId,
+                    MUTE.MENTION_DURATION,
+                    MessageType.text
+                ).catch(err => inputSanitization.handleError(err, client, WhatsAppBot));
+                return;
+            }
+
+            var duration: number = parseInt(args[0]);
+            var type: string = "minutes";
+            if (args[1] === "s") {
+                duration = duration * 1000;
+                type = "seconds";
+            } else if (args[1] === "m") {
+                duration = duration * 60 * 1000;
+                type = "minutes";
+            } else if (args[1] === "h") {
+                duration = duration * 60 * 60 * 1000;
+                type = "hours";
+            } else {
+                duration = duration * 60 * 1000; // default to minutes
+            }
+
+            await client.sock.chatModify(
+                { mute: duration },
+                WhatsAppBot.chatId
+            );
+            client.sendMessage(
+                WhatsAppBot.chatId,
+                "```Chat permissions changed to```  *admin only*  ```for " +
+                    args[0] +
+                    " " +
+                    type +
+                    ".```",
+                MessageType.text
+            ).catch(err => inputSanitization.handleError(err, client, WhatsAppBot));
+            setTimeout(async () => {
+                await client.sock.chatModify(
+                    { mute: null },
+                    WhatsAppBot.chatId
+                ).catch(err => inputSanitization.handleError(err, client, WhatsAppBot));
+                client.sendMessage(
+                    WhatsAppBot.chatId,
+                    MUTE.CHAT_ALL_MEMBERS,
+                    MessageType.text
+                ).catch(err => inputSanitization.handleError(err, client, WhatsAppBot));
+            }, duration);
+        } catch (err) {
+            await inputSanitization.handleError(err, client, WhatsAppBot);
+        }
+    },
+};

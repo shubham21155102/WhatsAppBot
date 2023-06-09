@@ -1,0 +1,10 @@
+node_modules
+config.env
+*.env
+config.env
+.env.test
+tmp/*
+BotsApp.db
+yarn-error.log
+dist/
+session.data.json

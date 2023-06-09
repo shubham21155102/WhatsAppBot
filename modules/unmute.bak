@@ -1,0 +1,43 @@
+const { GroupSettingChange, MessageType } = require("@adiwajshing/baileys");
+const inputSanitization = require("../sidekick/input-sanitization");
+const Strings = require("../lib/db");
+const UNMUTE = Strings.unmute;
+
+module.exports = {
+    name: "unmute",
+    description: UNMUTE.DESCRIPTION,
+    extendedDescription: UNMUTE.EXTENDED_DESCRIPTION,
+    demo: { isEnabled: true, text: ".unmute" },
+    async handle(client, chat, WhatsAppBot, args) {
+        try {
+            if (!WhatsAppBot.isGroup) {
+                client.sendMessage(
+                    WhatsAppBot.chatId,
+                    UNMUTE.NOT_GROUP_CHAT,
+                    MessageType.text
+                ).catch(err => inputSanitization.handleError(err, client, WhatsAppBot));
+                return;
+            }
+            if (!WhatsAppBot.isBotGroupAdmin) {
+                client.sendMessage(
+                    WhatsAppBot.chatId,
+                    UNMUTE.NOT_ADMIN,
+                    MessageType.text
+                ).catch(err => inputSanitization.handleError(err, client, WhatsAppBot));
+                return;
+            }
+            client.groupSettingChange(
+                WhatsAppBot.chatId,
+                GroupSettingChange.messageSend,
+                false
+            );
+            client.sendMessage(
+                WhatsAppBot.chatId,
+                UNMUTE.CHAT_ALL_MEMBERS,
+                MessageType.text
+            ).catch(err => inputSanitization.handleError(err, client, WhatsAppBot));
+        } catch (err) {
+            await inputSanitization.handleError(err, client, WhatsAppBot);
+        }
+    },
+};
