@@ -4,7 +4,7 @@ config.env
 config.env
 .env.test
 tmp/*
-BotsApp.db
+WhatsAppBot.db
 yarn-error.log
 dist/
 session.data.json

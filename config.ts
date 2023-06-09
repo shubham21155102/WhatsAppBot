@@ -17,7 +17,7 @@ const convertToLogLevel = (value: string) => {
     return log;
 }
 // Declare these environment variables first
-process.env.DATABASE_URL = './BotsApp.db';
+process.env.DATABASE_URL = './WhatsAppBot.db';
 process.env.DEBUG = 'false';
 const config = {
     NEWS_API_URL:process.env.NEWS_API_URL,
@@ -27,9 +27,9 @@ const config = {
     COUNTRY_CODE: "91",
     OCR_API_KEY:process.env.OCR_API_KEY,
     WEATHER_API_KEY: process.env.WEATHER_API_KEY,
-    DATABASE_URL: './BotsApp.db',
+    DATABASE_URL: './WhatsAppBot.db',
     DEBUG: false,
-    DATABASE: process.env.DATABASE_URL === './BotsApp.db' ?
+    DATABASE: process.env.DATABASE_URL === './WhatsAppBot.db' ?
         new Sequelize({
             dialect: "sqlite",
             storage: process.env.DATABASE_URL,
